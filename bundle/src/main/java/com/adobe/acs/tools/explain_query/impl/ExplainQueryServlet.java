@@ -96,6 +96,8 @@ public class ExplainQueryServlet extends SlingAllMethodsServlet {
 
     private static final Pattern PROPERTY_INDEX_PATTERN = Pattern.compile("\\/\\*\\sproperty\\s([^\\s=]+)[=\\s]");
     private static final Pattern FILTER_PATTERN = Pattern.compile("\\[[^\\s]+\\]\\sas\\s\\[[^\\s]+\\]\\s\\/\\*\\sFilter\\(");
+    private static final Pattern LOG_STATEMENT_CLEANING_PATTERN = Pattern.compile("^\\*[A-Z]+\\* [a-zA-Z0-9\\%\\.]+ ");
+
 
     @Property(label = "Query Logger Names",
             description = "Logger names from which logs need to be collected while a query is executed",
@@ -228,8 +230,8 @@ public class ExplainQueryServlet extends SlingAllMethodsServlet {
         }
         finally {
             if (logCollector != null) {
-                List<String> logs = logCollector.getLogs(collectorKey);
-                json.put("logs", logCollector.getLogs(collectorKey));
+                List<String> logs = this.cleanLogStatements(logCollector.getLogs(collectorKey));
+                json.put("logs", logs);
 
                 if (logs.size() == logCollector.msgCountLimit){
                     json.put("logsTruncated", true);
@@ -243,8 +245,6 @@ public class ExplainQueryServlet extends SlingAllMethodsServlet {
 
         final String plan = firstRow.getValue("plan").getString();
         json.put("plan", plan);
-
-
 
         final JSONArray propertyIndexes = new JSONArray();
 
@@ -305,7 +305,6 @@ public class ExplainQueryServlet extends SlingAllMethodsServlet {
         return json;
     }
 
-
     private JSONArray compositeQueryDataToJSON(Collection<CompositeData> queries) throws JSONException {
         final JSONArray jsonArray = new JSONArray();
 
@@ -340,6 +339,20 @@ public class ExplainQueryServlet extends SlingAllMethodsServlet {
         }
 
         return jsonArray;
+    }
+
+    private List<String> cleanLogStatements(final List<String> logs) {
+        final List<String> cleanedLogs = new ArrayList<String>();
+
+        for (final String entry : logs) {
+            if(entry != null) {
+                final Matcher m = LOG_STATEMENT_CLEANING_PATTERN.matcher(entry);
+                final String tmp = m.replaceFirst(StringUtils.EMPTY);
+                cleanedLogs.add(tmp);
+            }
+        }
+
+        return cleanedLogs;
     }
 
     private String startCollection(){

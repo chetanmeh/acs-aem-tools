@@ -168,16 +168,23 @@
                                         </div>
                                     </div>
 
-                                    <div class="call-out">{{ result.explain.plan }}</div>
-
-                                    <!-- TODO Simple impl which just dumps the logs as bullet list-->
                                     <div class="call-out">
-                                        <ul ng-repeat="log in result.explain.logs" >
-                                            <li>{{ log }}</li>
-                                        </ul>
-                                        <div ng-show="result.explain.logsTruncated">
-                                        ...
+                                        <div class="query-plan">{{ result.explain.plan }}</div>
+                                    </div>
+
+                                    <div ng-show="result.explain.logs && result.explain.logs.length > 0">
+
+                                        <div class="call-out logs code-ish">
+
+                                            <ul>
+                                                <li ng-repeat="log in result.explain.logs track by $index">{{ log }}</li>
+
+                                                <li ng-show="result.explain.logsTruncated">...</li>
+                                            </ul>
+
+
                                         </div>
+
                                     </div>
 
                                 </div>
@@ -201,7 +208,7 @@
                                         </thead>
 
                                         <tbody>
-                                            <tr ng-repeat="query in queries.slow"
+                                            <tr ng-repeat="query in queries.slow track by $index"
                                                 ng-class="{ expanded : query.expanded }">
                                                 <td class="num"
                                                     ng-click="load(query)">
